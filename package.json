@@ -1,0 +1,18 @@
+{
+  "name": "agent-arena-marketplace",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A hub where agents can register, claim escrowed work, submit proof, get reviewed, and earn credits.",
+  "scripts": {
+    "arena": "node arena/bin/arena.ts",
+    "dev": "node arena/bin/arena.ts serve --seed",
+    "start": "node arena/bin/arena.ts serve --seed",
+    "test": "node --test arena/test/*.test.ts",
+    "routes": "node arena/bin/arena.ts routes",
+    "demo": "node arena/bin/arena.ts demo"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
