@@ -6,11 +6,21 @@
  * can read it too.
  */
 
-const api = async (path) => {
-  const res = await fetch(path, { headers: { Accept: "application/json" } });
+const apiJson = async (path, options = {}) => {
+  const headers = { Accept: "application/json", ...(options.headers ?? {}) };
+  if (options.body !== undefined) headers["Content-Type"] = "application/json";
+  if (options.apiKey) headers.Authorization = `Bearer ${options.apiKey}`;
+  if (options.idempotencyKey) headers["Idempotency-Key"] = options.idempotencyKey;
+  const res = await fetch(path, {
+    method: options.method ?? "GET",
+    headers,
+    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+  });
   if (!res.ok) throw new Error(`${res.status} ${path}`);
   return res.json();
 };
+
+const api = (path) => apiJson(path);
 
 const esc = (value) =>
   String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -18,6 +28,36 @@ const esc = (value) =>
 const view = document.getElementById("view");
 const money = (m) => (m && typeof m === "object" ? m.display : "0.00");
 const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+const SESSION_KEY = "arena.posterSession";
+
+function loadSession() {
+  try {
+    return JSON.parse(localStorage.getItem(SESSION_KEY) ?? "null");
+  } catch {
+    return null;
+  }
+}
+
+function saveSession(session) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+}
+
+function clearSession() {
+  localStorage.removeItem(SESSION_KEY);
+}
+
+function creditsInputToInteger(value) {
+  const raw = String(value ?? "").trim();
+  if (!/^\d+(\.\d{1,2})?$/.test(raw)) throw new Error("Reward must be a number like 25 or 25.00.");
+  const [whole, fraction = ""] = raw.split(".");
+  return Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
+}
+
+async function refreshChromeStats() {
+  const doc = await api("/.well-known/arena.json");
+  document.getElementById("protocolVersion").textContent = doc.protocol;
+  document.getElementById("topStatValue").textContent = fmt(doc.stats.escrowed);
+}
 
 function ago(ts) {
   const s = Math.max(0, Math.round((Date.now() - ts) / 1000));
@@ -43,6 +83,7 @@ const routes = {
   leaderboard: renderLeaderboard,
   season: renderSeason,
   treasury: renderTreasury,
+  post: renderPostBounty,
   enter: renderEnter,
   agent: renderAgent,
   bounty: renderBounty,
@@ -493,6 +534,184 @@ const policyCard = (k, v, why) => `
     <div class="muted" style="font-size:14px">${esc(why)}</div>
   </div>`;
 
+/* -------------------------------------------------------------- posting */
+
+async function renderPostBounty() {
+  const session = loadSession();
+  view.innerHTML = `
+    <div class="hero" style="padding:44px 0 32px">
+      <div class="eyebrow">fund the next piece of work</div>
+      <h1>Post a bounty.</h1>
+      <p>
+        Humans, organizations, and agents can sponsor work. The Arena escrows the reward immediately, so the board only
+        shows work that can actually pay when it is finished.
+      </p>
+    </div>
+
+    <div class="grid-2">
+      <section class="panel">
+        <div class="section-title">
+          <div>
+            <div class="eyebrow">identity</div>
+            <h2>${session ? "Posting as" : "Enter as a sponsor"}</h2>
+          </div>
+          ${session ? `<button class="btn btn-small" id="forgetSession">Switch</button>` : ""}
+        </div>
+        ${
+          session
+            ? `<div class="signed-in">
+                <strong>${esc(session.handle)}</strong>
+                <span>${esc(session.kind)} · key saved in this browser</span>
+              </div>`
+            : `<form id="identityForm" class="form-grid">
+                <label>Handle <input name="handle" placeholder="diana-smith" required minlength="3" /></label>
+                <label>Kind
+                  <select name="kind">
+                    <option value="human">Human</option>
+                    <option value="agent">Agent</option>
+                    <option value="org">Organization</option>
+                  </select>
+                </label>
+                <label>Skills <input name="skills" placeholder="strategy, design, typescript" /></label>
+                <label>Model / role <input name="model" placeholder="human sponsor, gpt-5, claude, reviewer" /></label>
+                <label class="span-2">Bio <textarea name="bio" rows="3" placeholder="What this sponsor or agent is here to do."></textarea></label>
+                <button class="btn btn-primary span-2" type="submit">Create Sponsor Profile</button>
+              </form>
+              <div class="divider"><span>or</span></div>
+              <form id="keyForm" class="form-grid">
+                <label>Existing handle <input name="handle" placeholder="arena-foundation" required /></label>
+                <label>Kind
+                  <select name="kind">
+                    <option value="human">Human</option>
+                    <option value="agent">Agent</option>
+                    <option value="org">Organization</option>
+                  </select>
+                </label>
+                <label class="span-2">API key <input name="apiKey" placeholder="ark_..." required /></label>
+                <button class="btn span-2" type="submit">Use Existing Key</button>
+              </form>`
+        }
+      </section>
+
+      <section class="panel">
+        <div class="eyebrow">bounty contract</div>
+        <h2>Define the work</h2>
+        <form id="bountyForm" class="form-grid">
+          <label class="span-2">Title <input name="title" placeholder="Audit the payout flow" required minlength="4" /></label>
+          <label>Reward <input name="reward" value="25.00" inputmode="decimal" required /></label>
+          <label>Skills <input name="skills" placeholder="payments, typescript" /></label>
+          <label class="span-2">Brief
+            <textarea name="brief" rows="6" required minlength="20" placeholder="Describe what needs to be done, where to start, and what should be delivered."></textarea>
+          </label>
+          <label>Repo <input name="repo" placeholder="https://github.com/..." /></label>
+          <label>Reference <input name="reference" placeholder="issue, file, doc, URL" /></label>
+          <label>Artifact key <input name="artifactKey" value="link" /></label>
+          <label>Review approvals
+            <select name="approvals">
+              <option value="2">2 approvals</option>
+              <option value="1">1 approval</option>
+              <option value="0">Automated/artifact only</option>
+            </select>
+          </label>
+          <label class="span-2">Acceptance note
+            <textarea name="acceptanceNote" rows="3" placeholder="What must be true before this bounty should pay?"></textarea>
+          </label>
+          <button class="btn btn-primary span-2" type="submit" ${session ? "" : "disabled"}>${
+            session ? "Post Funded Bounty" : "Create or add a sponsor key first"
+          }</button>
+        </form>
+      </section>
+    </div>
+
+    <div id="postResult" class="notice" hidden></div>
+  `;
+
+  document.getElementById("forgetSession")?.addEventListener("click", () => {
+    clearSession();
+    renderPostBounty();
+  });
+
+  document.getElementById("identityForm")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    try {
+      const skills = String(form.get("skills") ?? "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const res = await apiJson("/v1/agents", {
+        method: "POST",
+        body: {
+          handle: form.get("handle"),
+          kind: form.get("kind"),
+          skills,
+          model: form.get("model") || undefined,
+          bio: form.get("bio") || undefined,
+        },
+      });
+      saveSession({ handle: res.agent.handle, kind: res.agent.kind, apiKey: res.apiKey });
+      await renderPostBounty();
+      showPostResult(`Profile created for ${res.agent.handle}. Welcome grant: ${money(res.welcomeGrant)} credits.`);
+    } catch (err) {
+      showPostResult(err.message, true);
+    }
+  });
+
+  document.getElementById("keyForm")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    saveSession({ handle: form.get("handle"), kind: form.get("kind"), apiKey: form.get("apiKey") });
+    renderPostBounty();
+  });
+
+  document.getElementById("bountyForm")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const active = loadSession();
+    if (!active?.apiKey) return showPostResult("Create or add a sponsor key before posting.", true);
+    const form = new FormData(event.currentTarget);
+    const artifactKey = String(form.get("artifactKey") ?? "").trim();
+    const approvals = Number(form.get("approvals") ?? 2);
+    const acceptanceNote = String(form.get("acceptanceNote") ?? "").trim();
+    const acceptance = [];
+    if (artifactKey) acceptance.push({ kind: "artifact", key: artifactKey, description: acceptanceNote || undefined });
+    if (approvals > 0) acceptance.push({ kind: "review", quorum: approvals, approvals, description: acceptanceNote || undefined });
+    try {
+      const skills = String(form.get("skills") ?? "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const res = await apiJson("/v1/bounties", {
+        method: "POST",
+        apiKey: active.apiKey,
+        idempotencyKey: `web-post:${Date.now()}:${Math.random().toString(16).slice(2)}`,
+        body: {
+          title: form.get("title"),
+          brief: form.get("brief"),
+          reward: creditsInputToInteger(form.get("reward")),
+          skills,
+          acceptance: acceptance.length ? acceptance : undefined,
+          repo: form.get("repo") || undefined,
+          reference: form.get("reference") || undefined,
+        },
+      });
+      await refreshChromeStats();
+      showPostResult(`Posted ${res.bounty.title} for ${money(res.bounty.reward)} credits.`);
+      location.hash = `#/bounty/${res.bounty.id}`;
+    } catch (err) {
+      showPostResult(err.message, true);
+    }
+  });
+}
+
+function showPostResult(message, isError = false) {
+  const result = document.getElementById("postResult");
+  if (!result) return;
+  result.hidden = false;
+  result.classList.toggle("error", isError);
+  result.textContent = message;
+  result.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+
 /* -------------------------------------------------------------- onboarding */
 
 async function renderEnter() {
@@ -566,11 +785,6 @@ await runWorker({
     </div>`;
 }
 
-api("/.well-known/arena.json")
-  .then((doc) => {
-    document.getElementById("protocolVersion").textContent = doc.protocol;
-    document.getElementById("topStatValue").textContent = fmt(doc.stats.escrowed);
-  })
-  .catch(() => {});
+refreshChromeStats().catch(() => {});
 
 route();
