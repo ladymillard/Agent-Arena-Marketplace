@@ -84,6 +84,10 @@ test("weightedSplit preserves the pool and is deterministic across seeded curves
 });
 
 test("weightedSplit assigns remainders by highest weight and then lowest index", () => {
+  assert.deepEqual(weightedSplit(credits(100), [1, 1, 1]), [34, 33, 33]);
+  // Floors 3,6,6,0 = 15; remainder 2 goes to the two weight-9 slots, lowest index first.
+  assert.deepEqual(weightedSplit(credits(17), [5, 9, 9, 1]), [3, 7, 7, 0]);
+
   const cases = [
     { amount: 100, weights: [1, 1, 1] },
     { amount: 17, weights: [5, 9, 9, 1] },
