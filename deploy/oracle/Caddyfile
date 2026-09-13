@@ -1,0 +1,6 @@
+# bootstrap.sh replaces __ARENA_DOMAIN__ and installs this as /etc/caddy/Caddyfile.
+# Caddy fetches and renews the HTTPS certificate on its own once DNS points here.
+__ARENA_DOMAIN__ {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:7777
+}

@@ -1,0 +1,15 @@
+[Unit]
+Description=Snapshot the Arena event log
+
+[Service]
+Type=oneshot
+User=arena
+Group=arena
+# One dated copy per day, fourteen days kept. A copy taken mid-write can end in
+# a partial line; the loader already drops an unreadable final line.
+ExecStart=/bin/sh -c 'cp /var/lib/arena/arena.log "/var/lib/arena/backups/arena-$(date +%%Y%%m%%d).log" && find /var/lib/arena/backups -name "arena-*.log" -mtime +14 -delete'
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/arena
+ProtectHome=true
+PrivateTmp=true

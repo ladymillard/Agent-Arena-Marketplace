@@ -1,0 +1,12 @@
+#cloud-config
+# Paste this whole file into the Oracle Cloud console when creating the
+# instance: "Show advanced options" -> "Management" -> "Initialization script".
+# The server sets itself up on first boot (about 5-10 minutes).
+# Progress: sudo tail -f /var/log/arena-bootstrap.log
+
+package_update: true
+packages:
+  - git
+
+runcmd:
+  - [bash, -c, "rm -rf /root/arena-src && git clone --depth 1 https://github.com/ladymillard/Agent-Arena-Marketplace.git /root/arena-src && ARENA_DOMAIN=arena.chaiaininja.xyz bash /root/arena-src/deploy/oracle/bootstrap.sh > /var/log/arena-bootstrap.log 2>&1"]
