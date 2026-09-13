@@ -1,0 +1,537 @@
+/* website.scss — D&D design system
+ *
+ * Kept verbatim from Diana's design system so it stays diffable against the
+ * source. Do not reformat or "tidy" it. Arena-specific layout lives in
+ * style.css, which loads after this file.
+ */
+
+/* -------------------------------------------------------
+   TYPE
+------------------------------------------------------- */
+
+:root {
+  --dd-black: #090909;
+  --dd-ink: #151515;
+  --dd-graphite: #565656;
+  --dd-grey: #a4a4a4;
+  --dd-line: #d9d9d4;
+  --dd-paper: #f4f3ed;
+  --dd-white: #ffffff;
+
+  /* Signature D&D signal */
+  --dd-accent: #c7ff18;
+
+  --dd-display: Arial, Helvetica, sans-serif;
+  --dd-sans: Arial, Helvetica, sans-serif;
+
+  --dd-radius: 0;
+  --dd-max-width: 1440px;
+
+  --dd-space-xs: 0.5rem;
+  --dd-space-sm: 1rem;
+  --dd-space-md: 2rem;
+  --dd-space-lg: 4rem;
+  --dd-space-xl: 8rem;
+  --dd-space-xxl: 12rem;
+}
+
+/* -------------------------------------------------------
+   GLOBAL
+------------------------------------------------------- */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body,
+#wrapwrap {
+  background: var(--dd-paper);
+  color: var(--dd-black);
+  font-family: var(--dd-sans);
+  font-size: 16px;
+  line-height: 1.45;
+  letter-spacing: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+#wrap {
+  overflow: hidden;
+}
+
+.container,
+.container-lg,
+.container-xl {
+  max-width: var(--dd-max-width);
+}
+
+::selection {
+  background: var(--dd-accent);
+  color: var(--dd-black);
+}
+
+/* -------------------------------------------------------
+   TYPOGRAPHY
+------------------------------------------------------- */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.display-1,
+.display-2,
+.display-3,
+.display-4 {
+  font-family: var(--dd-display);
+  color: var(--dd-black);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 0.94;
+}
+
+h1,
+.display-1 {
+  font-size: clamp(3.5rem, 7.2vw, 7.5rem);
+}
+
+h2,
+.display-2 {
+  font-size: clamp(3rem, 6.2vw, 6.5rem);
+}
+
+h3 {
+  font-size: clamp(2rem, 3.5vw, 4.5rem);
+}
+
+p {
+  max-width: 68ch;
+}
+
+.lead {
+  font-size: clamp(1.25rem, 2vw, 2rem);
+  line-height: 1.35;
+  letter-spacing: -0.025em;
+}
+
+small,
+.text-muted {
+  color: var(--dd-graphite) !important;
+}
+
+/* -------------------------------------------------------
+   D&D EYEBROWS / SIGNAL LABELS
+------------------------------------------------------- */
+
+.dd-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dd-eyebrow::before {
+  content: "";
+  width: 0.7rem;
+  height: 0.7rem;
+  background: var(--dd-accent);
+}
+
+/* -------------------------------------------------------
+   NAVIGATION
+------------------------------------------------------- */
+
+#top {
+  background: var(--dd-paper);
+  border-bottom: 1px solid var(--dd-black);
+}
+
+.navbar {
+  min-height: 80px;
+  padding: 0 2vw;
+}
+
+.navbar-brand {
+  font-family: var(--dd-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.06em;
+}
+
+.navbar-nav .nav-link {
+  color: var(--dd-black) !important;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  padding-inline: 1rem !important;
+}
+
+.navbar-nav .nav-link:hover {
+  opacity: 1;
+  box-shadow: 0 3px 0 var(--dd-accent);
+}
+
+/* -------------------------------------------------------
+   HERO
+------------------------------------------------------- */
+
+.dd-hero {
+  min-height: min(860px, calc(100svh - 80px));
+  display: flex;
+  align-items: flex-end;
+  padding: clamp(5rem, 10vw, 9rem) clamp(1.5rem, 5vw, 6rem) clamp(4rem, 8vw, 8rem);
+}
+
+.dd-hero__title {
+  max-width: 18ch;
+  margin: 0;
+}
+
+.dd-hero__title span {
+  display: block;
+}
+
+.dd-hero__accent {
+  color: inherit;
+}
+
+/* -------------------------------------------------------
+   EDITORIAL SECTIONS
+------------------------------------------------------- */
+
+.dd-section {
+  position: relative;
+  padding: clamp(6rem, 11vw, 12rem) clamp(1.5rem, 5vw, 6rem);
+  border-top: 1px solid var(--dd-line);
+}
+
+.dd-section--dark {
+  background: var(--dd-black);
+  color: var(--dd-white);
+}
+
+.dd-section--dark h1,
+.dd-section--dark h2,
+.dd-section--dark h3 {
+  color: var(--dd-white);
+}
+
+.dd-section-number {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dd-graphite);
+}
+
+/* -------------------------------------------------------
+   FUTURE OS — 3 STAGE SYSTEM
+------------------------------------------------------- */
+
+.dd-os {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(2rem, 5vw, 6rem);
+  position: relative;
+}
+
+.dd-os::after {
+  position: absolute;
+  right: 0;
+  bottom: 3.25rem;
+  left: 0;
+  height: 1px;
+  background: var(--dd-black);
+  content: "";
+  z-index: 0;
+}
+
+.dd-os__step {
+  min-height: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.dd-os__step h3 {
+  display: grid;
+  min-height: 8rem;
+  padding: 1.5rem;
+  place-items: center;
+  border: 1px solid var(--dd-black);
+  background: var(--dd-paper);
+  font-size: clamp(1.1rem, 2vw, 1.65rem);
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.dd-os__step:last-child h3 {
+  border-color: var(--dd-accent);
+}
+
+.dd-os__step::after {
+  width: 0.55rem;
+  height: 0.55rem;
+  margin: auto auto 0;
+  border-radius: 50%;
+  background: var(--dd-black);
+  content: "";
+}
+
+.dd-os__step-index {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-inline: auto;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.dd-os__arrow {
+  display: none;
+}
+
+/* -------------------------------------------------------
+   DATA / EVIDENCE
+------------------------------------------------------- */
+
+.dd-stat {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1.5fr) 5rem minmax(14rem, 4fr) 5rem;
+  gap: clamp(1rem, 2vw, 2rem);
+  align-items: center;
+  padding: 1.5rem 0;
+  border-top: 1px solid var(--dd-line);
+}
+
+.dd-stat__value {
+  font-family: var(--dd-display);
+  font-size: 2rem;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.dd-stat__label {
+  margin-top: 0;
+  max-width: 32rem;
+  color: var(--dd-black);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* -------------------------------------------------------
+   BUTTONS
+------------------------------------------------------- */
+
+.btn {
+  border-radius: var(--dd-radius) !important;
+  font-family: var(--dd-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  padding: 1rem 1.6rem;
+  transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.btn-primary {
+  background: var(--dd-black);
+  border-color: var(--dd-black);
+  color: var(--dd-white);
+}
+
+.btn-primary:hover {
+  background: var(--dd-accent);
+  border-color: var(--dd-accent);
+  color: var(--dd-black);
+  transform: translateY(-2px);
+}
+
+.btn-outline-primary {
+  border-color: var(--dd-black);
+  color: var(--dd-black);
+}
+
+.btn-outline-primary:hover {
+  background: var(--dd-black);
+  color: var(--dd-white);
+}
+
+/* -------------------------------------------------------
+   LINKS
+------------------------------------------------------- */
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.dd-link {
+  display: inline-flex;
+  gap: 0.75rem;
+  align-items: center;
+  text-decoration: none;
+  border-bottom: 1px solid var(--dd-black);
+  padding-bottom: 0.25rem;
+}
+
+/* -------------------------------------------------------
+   CARDS
+------------------------------------------------------- */
+
+.card {
+  background: transparent;
+  border: 1px solid var(--dd-line);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.card-body {
+  padding: clamp(1.75rem, 3vw, 3rem);
+}
+
+/* -------------------------------------------------------
+   FORMS
+------------------------------------------------------- */
+
+.form-control,
+.form-select {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--dd-black);
+  border-radius: 0;
+  padding: 1rem 0;
+  font-family: var(--dd-sans);
+}
+
+.form-control:focus,
+.form-select:focus {
+  background: transparent;
+  border-color: var(--dd-accent);
+  box-shadow: none;
+}
+
+/* -------------------------------------------------------
+   FOOTER
+------------------------------------------------------- */
+
+footer,
+#footer {
+  background: var(--dd-paper) !important;
+  color: var(--dd-black);
+  padding-top: clamp(4rem, 8vw, 8rem);
+  border-top: 1px solid var(--dd-line);
+}
+
+footer a,
+#footer a {
+  color: var(--dd-black);
+}
+
+.dd-footer-statement {
+  max-width: 17ch;
+  font-family: var(--dd-display);
+  font-size: clamp(3rem, 6.2vw, 6.5rem);
+  font-weight: 700;
+  line-height: 0.94;
+  letter-spacing: -0.045em;
+}
+
+/* -------------------------------------------------------
+   MICRO INTERACTION
+------------------------------------------------------- */
+
+.dd-signal-line {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    var(--dd-accent) 0%,
+    var(--dd-accent) 18%,
+    var(--dd-line) 18%,
+    var(--dd-line) 100%
+  );
+}
+
+/* -------------------------------------------------------
+   RESPONSIVE
+------------------------------------------------------- */
+
+@media (max-width: 991px) {
+  .dd-os {
+    grid-template-columns: 1fr;
+  }
+
+  .dd-os::after {
+    display: none;
+  }
+
+  .dd-os__step {
+    min-height: 0;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--dd-line);
+  }
+
+  .dd-os__step:last-child {
+    border-bottom: 0;
+  }
+
+  .dd-os__step::after {
+    display: none;
+  }
+
+  .dd-stat {
+    grid-template-columns: minmax(9rem, 1fr) 4rem;
+  }
+
+  .dd-stat__value {
+    text-align: right;
+  }
+}
+
+@media (max-width: 767px) {
+  .navbar {
+    min-height: 72px;
+  }
+
+  .dd-hero {
+    min-height: auto;
+  }
+
+  h1,
+  .display-1 {
+    font-size: clamp(3.2rem, 15vw, 6rem);
+  }
+
+  .dd-stat {
+    grid-template-columns: 1fr auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

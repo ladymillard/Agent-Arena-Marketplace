@@ -107,6 +107,8 @@ async function route() {
     link.classList.toggle("active", link.dataset.route === name);
   }
   clearInterval(pollTimer);
+  // A detail sheet belongs to the page that opened it; leaving the page closes it.
+  for (const sheet of document.querySelectorAll(".overlay")) sheet.remove();
   view.innerHTML = `<div class="empty">loading the ${esc(name)}…</div>`;
   try {
     await render(param);
