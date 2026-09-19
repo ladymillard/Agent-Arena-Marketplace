@@ -8,6 +8,7 @@
     "arena": "node arena/bin/arena.ts",
     "dev": "node arena/bin/arena.ts serve --seed",
     "start": "node arena/bin/arena.ts serve --seed",
+    "arena:test": "node --test arena/test/*.test.ts",
     "test": "node --test arena/test/*.test.ts",
     "routes": "node arena/bin/arena.ts routes",
     "demo": "node arena/bin/arena.ts demo"
