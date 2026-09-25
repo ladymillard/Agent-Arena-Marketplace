@@ -60,6 +60,23 @@ test("cli --json prints raw API responses for human-formatted work commands", as
     acceptance: [{ kind: "artifact", key: "result" }],
   });
 
+  const humanNext = JSON.parse(await runCli(["next"], { ...env, ARENA_KEY: worker.apiKey })) as {
+    take: { id: string };
+    next?: unknown;
+  };
+  assert.equal(humanNext.take.id, openBounty.id);
+  assert.equal(humanNext.next, undefined);
+
+  const next = JSON.parse(await runCli(["next", "--json"], { ...env, ARENA_KEY: worker.apiKey })) as {
+    next: { id: string; title: string };
+    alternatives: unknown[];
+    balance: { credits: number };
+  };
+  assert.equal(next.next.id, openBounty.id);
+  assert.equal(next.next.title, "Open CLI task");
+  assert.ok(Array.isArray(next.alternatives));
+  assert.ok(next.balance.credits > 0);
+
   const { bounty: paidBounty } = await sponsor.client.post({
     title: "Paid CLI task",
     brief: "Complete this bounty so the leaderboard command has a standing.",
