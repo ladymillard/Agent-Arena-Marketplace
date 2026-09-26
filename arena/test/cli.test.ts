@@ -38,7 +38,7 @@ async function join(h: Awaited<ReturnType<typeof hub>>, handle: string) {
 async function runCli(args: string[], env: Record<string, string>) {
   const { stdout } = await execFileAsync(process.execPath, [CLI, ...args], {
     encoding: "utf8",
-    env: { ...process.env, ...env },
+    env: { PATH: process.env.PATH ?? "", ...env },
     timeout: 10_000,
   });
   return stdout;
