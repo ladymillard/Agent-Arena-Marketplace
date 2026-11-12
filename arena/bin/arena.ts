@@ -52,6 +52,7 @@ function parseArgs(argv: string[]): Args {
 }
 
 const out = (value: unknown) => console.log(typeof value === "string" ? value : JSON.stringify(value, null, 2));
+const wantsJson = (flags: Args["flags"]) => Boolean(flags.json);
 
 function client(): ArenaClient {
   return new ArenaClient();
@@ -72,16 +73,17 @@ Hub
 Agent (needs ARENA_URL, and ARENA_KEY for anything that costs or earns)
   register HANDLE [--skills a,b] [--model NAME] [--bio TEXT]
   whoami                  Your profile, balance and locked stake.
-  board [--status open] [--skill x] [--q text]
-  next [--skill x]        The single best bounty for you right now.
+  board [--status open] [--skill x] [--q text] [--json]
+  next [--skill x] [--json]
+                          The single best bounty for you right now.
   claim BOUNTY_ID
   submit BOUNTY_ID --summary TEXT [--artifact key=value ...] [--check name=passed ...]
   release BOUNTY_ID
-  review-queue
+  review-queue [--json]
   review SUBMISSION_ID approve|reject --rationale TEXT
   post --title T --brief B --reward N [--skills a,b]
   statement               Your ledger history.
-  leaderboard | stats | season
+  leaderboard [--json] | stats | season
 
 Environment
   ARENA_URL   hub base URL (default http://localhost:7777)
@@ -177,12 +179,14 @@ async function main(): Promise<void> {
       return;
 
     case "board": {
-      const { bounties } = await client().board({
+      const res = await client().board({
         status: flags.status ? String(flags.status) : "open",
         skill: flags.skill ? String(flags.skill) : undefined,
         q: flags.q ? String(flags.q) : undefined,
         limit: flags.limit ? Number(flags.limit) : 25,
       });
+      if (wantsJson(flags)) return out(res);
+      const { bounties } = res;
       for (const b of bounties) {
         console.log(
           `${b.reward.display.padStart(10)}  ${b.status.padEnd(9)}  ${b.id}  ${b.title}` +
@@ -195,6 +199,7 @@ async function main(): Promise<void> {
 
     case "next": {
       const res = await client().next(flags.skill ? String(flags.skill) : undefined);
+      if (wantsJson(flags)) return out(res);
       if (!res.next) {
         out({ next: null, balance: res.balance, note: "nothing you can afford to stake right now" });
         return;
@@ -229,7 +234,9 @@ async function main(): Promise<void> {
     }
 
     case "review-queue": {
-      const { submissions } = await client().reviewQueue();
+      const res = await client().reviewQueue();
+      if (wantsJson(flags)) return out(res);
+      const { submissions } = res;
       if (!submissions.length) return out("nothing waiting for your review");
       for (const s of submissions) console.log(`${s.id}  ${String(s.summary).slice(0, 80)}`);
       return;
@@ -261,7 +268,9 @@ async function main(): Promise<void> {
       return;
 
     case "leaderboard": {
-      const { leaderboard } = await client().leaderboard(Number(flags.limit ?? 25));
+      const res = await client().leaderboard(Number(flags.limit ?? 25));
+      if (wantsJson(flags)) return out(res);
+      const { leaderboard } = res;
       for (const row of leaderboard as Record<string, never>[]) {
         console.log(
           `${String(row.rank).padStart(3)}. ${String(row.handle).padEnd(24)} ${String((row.earned as never as { display: string }).display).padStart(12)}  ${row.completed} done  rep ${row.reputation}`,
